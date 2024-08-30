@@ -2,9 +2,18 @@ require("dotenv").config();
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+var cors = require("cors");
 
 const app = express();
 app.use(express.json());
+app.use(
+  cors({
+    origin: "*",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+);
 
 // Giả lập database user
 const users = [
@@ -21,6 +30,7 @@ let refreshTokens = [];
 // API đăng nhập
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
+
   // Kiểm tra user
   const user = users.find((u) => u.username === username);
   if (!user) {
@@ -85,7 +95,12 @@ const authenticateToken = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
-      return res.status(403).json({ message: "Invalid or expired token" });
+      return res.status(401).json({
+        message:
+          err.name == "TokenExpiredError"
+            ? "Authentication token is expired"
+            : "Invalid or expired token",
+      });
     }
     req.user = user;
     next();
@@ -98,13 +113,13 @@ app.post("/refresh-token", (req, res) => {
 
   if (!refreshToken || !refreshTokens.includes(refreshToken)) {
     return res
-      .status(403)
+      .status(401)
       .json({ message: "Refresh token not found, login again" });
   }
 
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
     if (err) {
-      return res.status(403).json({ message: "Invalid refresh token" });
+      return res.status(401).json({ message: "Invalid refresh token" });
     }
 
     const accessToken = jwt.sign(
@@ -122,8 +137,12 @@ app.post("/refresh-token", (req, res) => {
 });
 
 // Route được bảo vệ
-app.get("/protected", authenticateToken, (req, res) => {
+app.get("/user", authenticateToken, (req, res) => {
   res.json({ message: "This is a protected route", user: req.user });
+});
+
+app.get("/anotherApi", authenticateToken, (req, res) => {
+  res.json({ message: "another api" });
 });
 
 // Hàm chuyển đổi chuỗi thời gian thành milliseconds
