@@ -26,15 +26,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 // Schema definition
 const UserSchema = new mongoose_1.Schema({
-    username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    firstName: { type: String },
-    lastName: { type: String },
-    dateOfBirth: { type: Date },
     role: { type: String, enum: ["user", "admin"], default: "user" },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
+    refreshToken: { type: String },
 }, {
     timestamps: true, // Tự động thêm createdAt và updatedAt
 });
