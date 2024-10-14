@@ -3,21 +3,18 @@ import { ms } from "./time";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "df_token_sr";
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "df_token_sr";
-const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_SECRET || "15m";
-const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_SECRET || "7d";
+const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "15m";
+const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d";
 
 export function generateAccessToken(userId: string): string {
-  console.log(`aa ${ACCESS_TOKEN_EXPIRY} - ${ms(ACCESS_TOKEN_EXPIRY)}`);
-
   return jwt.sign({ userId }, ACCESS_TOKEN_SECRET, {
-    expiresIn: ms(ACCESS_TOKEN_EXPIRY),
+    expiresIn: ACCESS_TOKEN_EXPIRY,
   });
 }
 
 export function generateRefreshToken(userId: string): string {
-  console.log(`bb ${REFRESH_TOKEN_EXPIRY} - ${ms(REFRESH_TOKEN_EXPIRY)}`);
   return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
-    expiresIn: ms(REFRESH_TOKEN_EXPIRY),
+    expiresIn: REFRESH_TOKEN_EXPIRY,
   });
 }
 
