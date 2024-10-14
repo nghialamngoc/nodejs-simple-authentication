@@ -4,8 +4,6 @@ import CryptoJS from "crypto-js";
 const SERVER_SECRET_KEY = process.env.SECRET_KEY || "default-server-secret-key";
 
 export function encryptPassword(clientHashedPassword: string): string {
-  console.log("SERVER_SECRET_KEY: ", SERVER_SECRET_KEY);
-
   return CryptoJS.HmacSHA256(
     clientHashedPassword,
     SERVER_SECRET_KEY

@@ -7,12 +7,15 @@ const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_SECRET || "15m";
 const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_SECRET || "7d";
 
 export function generateAccessToken(userId: string): string {
+  console.log(`aa ${ACCESS_TOKEN_EXPIRY} - ${ms(ACCESS_TOKEN_EXPIRY)}`);
+
   return jwt.sign({ userId }, ACCESS_TOKEN_SECRET, {
     expiresIn: ms(ACCESS_TOKEN_EXPIRY),
   });
 }
 
 export function generateRefreshToken(userId: string): string {
+  console.log(`bb ${REFRESH_TOKEN_EXPIRY} - ${ms(REFRESH_TOKEN_EXPIRY)}`);
   return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
     expiresIn: ms(REFRESH_TOKEN_EXPIRY),
   });
