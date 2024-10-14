@@ -97,9 +97,6 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
   try {
     const { email, password: clientHashPassword } = req.body;
 
-    console.log("email", JSON.stringify(email));
-    console.log("clientHashPassword", JSON.stringify(clientHashPassword));
-
     // Tìm user trong database
     const user = await User.findOne({ email });
 
