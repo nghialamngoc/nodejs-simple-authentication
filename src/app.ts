@@ -25,7 +25,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
-  res.send(`Hello, TypeScript with MongoDB! Environment: ${environment}`);
+  res.send(`Hello, TypeScript with MongoDB! Environment 1: ${environment}`);
 });
 
 app.get("/protected", authenticateToken, (req: AuthRequest, res) => {
