@@ -97,12 +97,13 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
   try {
     const { email, password: clientHashPassword } = req.body;
 
-    console.log("email", email, clientHashPassword);
+    console.log("email", JSON.stringify(email));
+    console.log("clientHashPassword", JSON.stringify(clientHashPassword));
 
     // Tìm user trong database
     const user = await User.findOne({ email });
 
-    console.log("user", user);
+    console.log("user", JSON.stringify(user));
 
     if (!user) {
       res.status(401).json({ message: "Email hoặc password không đúng." });
