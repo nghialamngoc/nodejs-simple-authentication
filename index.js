@@ -46,7 +46,7 @@ app.post("/login", async (req, res) => {
   // Tạo JWT token
   const accessToken = jwt.sign(
     { id: user.id, username: user.username },
-    process.env.JWT_SECRET,
+    process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
   );
 
@@ -93,7 +93,7 @@ const authenticateToken = (req, res, next) => {
       .json({ message: "Authentication token is required" });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
     if (err) {
       return res.status(401).json({
         message:
@@ -124,7 +124,7 @@ app.post("/refresh-token", (req, res) => {
 
     const accessToken = jwt.sign(
       { id: user.id, username: user.username },
-      process.env.JWT_SECRET,
+      process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
     );
 
