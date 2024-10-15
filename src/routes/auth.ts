@@ -100,8 +100,6 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
     // Tìm user trong database
     const user = await User.findOne({ email });
 
-    console.log("user", JSON.stringify(user));
-
     if (!user) {
       res.status(401).json({ message: "Email hoặc password không đúng." });
       return;
@@ -148,7 +146,7 @@ router.post(
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      res.status(400).json({ message: "Refresh Token is required" });
+      res.status(400).json({ message: "Refresh Token đã hết hạn." });
       return;
     }
 
@@ -163,7 +161,7 @@ router.post(
       });
 
       if (!user) {
-        res.status(403).json({ message: "Invalid refresh token" });
+        res.status(403).json({ message: "Refresh Token không hợp lệ." });
         return;
       }
 
@@ -174,7 +172,7 @@ router.post(
       res.json({ accessToken });
     } catch (error) {
       console.error("Refresh token error:", error);
-      res.status(403).json({ message: "Invalid refresh token" });
+      res.status(403).json({ message: "Refresh Token không hợp lệ." });
     }
   }
 );

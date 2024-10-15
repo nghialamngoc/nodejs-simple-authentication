@@ -1,9 +1,10 @@
-import express from "express";
-import connectDB from "./database";
+import cors from "cors";
 import dotenv from "dotenv";
+import express from "express";
 import path from "path";
-import authRoutes from "./routes/auth";
+import connectDB from "./database";
 import { AuthRequest, authenticateToken } from "./middleware/auth";
+import authRoutes from "./routes/auth";
 
 // Xác định môi trường
 const environment = process.env.NODE_ENV || "development";
@@ -17,6 +18,16 @@ console.log(`Current environment: ${environment}`);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// CORS config
+app.use(
+  cors({
+    origin: "*",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+);
 
 connectDB();
 

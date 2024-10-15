@@ -1,5 +1,4 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { ms } from "./time";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "df_token_sr";
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "df_token_sr";
