@@ -7,6 +7,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from "../utils/jwt";
+import { ms } from "../utils/time";
 
 const router = express.Router();
 const upload = multer();
@@ -124,10 +125,16 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
     user.refreshToken = refreshToken;
     await user.save();
 
+    // set refreshToken to cookie
+    res.cookie("blog_rf_tk", refreshToken, {
+      maxAge: ms(process.env.REFRESH_TOKEN_EXPIRY ?? "7d"),
+      httpOnly: true,
+      secure: true,
+    });
+
     // Gửi tokens về client
     res.status(200).json({
       accessToken,
-      refreshToken,
       user: {
         id: user._id,
         email: user.email,
