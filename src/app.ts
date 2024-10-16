@@ -14,6 +14,10 @@ dotenv.config({
   path: path.resolve(__dirname, `../.env.${environment}`),
 });
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : [];
+
 console.log(`Current environment: ${environment}`);
 
 const app = express();
@@ -22,10 +26,11 @@ const PORT = process.env.PORT || 3000;
 // CORS config
 app.use(
   cors({
-    origin: "*",
+    origin: allowedOrigins,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     preflightContinue: false,
     optionsSuccessStatus: 204,
+    credentials: true,
   })
 );
 

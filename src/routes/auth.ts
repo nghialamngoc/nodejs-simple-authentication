@@ -129,7 +129,7 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
     res.cookie("blog_rf_tk", refreshToken, {
       maxAge: ms(process.env.REFRESH_TOKEN_EXPIRY ?? "7d"),
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
     });
 
     // Gửi tokens về client
