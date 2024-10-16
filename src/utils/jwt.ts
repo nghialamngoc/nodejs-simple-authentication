@@ -18,6 +18,8 @@ export function generateRefreshToken(userId: string): string {
 }
 
 export function verifyAccessToken(token: string): JwtPayload {
+  console.log("ACCESS_TOKEN_SECRET", ACCESS_TOKEN_SECRET);
+
   return jwt.verify(token, ACCESS_TOKEN_SECRET) as JwtPayload;
 }
 
