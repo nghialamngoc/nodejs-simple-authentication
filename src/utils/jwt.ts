@@ -6,6 +6,7 @@ const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "15m";
 const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d";
 
 export function generateAccessToken(userId: string): string {
+  console.log("ACCESS_TOKEN_SECRET", ACCESS_TOKEN_SECRET);
   return jwt.sign({ userId }, ACCESS_TOKEN_SECRET, {
     expiresIn: ACCESS_TOKEN_EXPIRY,
   });
