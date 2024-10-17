@@ -130,6 +130,8 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
       maxAge: ms(process.env.REFRESH_TOKEN_EXPIRY ?? "7d"),
       httpOnly: true,
       secure: true,
+      sameSite: "lax",
+      path: "*",
     });
 
     // Gửi tokens về client
