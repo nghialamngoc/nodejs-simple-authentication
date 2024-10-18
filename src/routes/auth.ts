@@ -126,11 +126,12 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
     await user.save();
 
     // set refreshToken to cookie
-    // res.cookie("blog_rf_tk", refreshToken, {
-    //   maxAge: ms(process.env.REFRESH_TOKEN_EXPIRY ?? "7d"),
-    //   httpOnly: true,
-    //   secure: true,
-    // });
+    res.cookie(process.env.RFTK_KEY ?? "", refreshToken, {
+      maxAge: ms(process.env.REFRESH_TOKEN_EXPIRY ?? "7d"),
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
 
     // Gửi tokens về client
     res.status(200).json({
