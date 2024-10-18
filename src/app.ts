@@ -5,6 +5,7 @@ import path from "path";
 import connectDB from "./database";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/user";
+import cookieParser from "cookie-parser";
 
 // Xác định môi trường
 const environment = process.env.NODE_ENV || "development";
@@ -33,6 +34,9 @@ app.use(
     credentials: true,
   })
 );
+
+// Cookie parser
+app.use(cookieParser());
 
 connectDB();
 

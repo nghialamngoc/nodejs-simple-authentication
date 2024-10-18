@@ -151,7 +151,7 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
 router.post(
   "/refresh-token",
   async (req: RefreshTokenRequest, res: Response) => {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies[process.env.RFTK_KEY ?? ""];
 
     if (!refreshToken) {
       res.status(400).json({ message: "Refresh Token đã hết hạn." });
