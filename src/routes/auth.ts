@@ -171,7 +171,9 @@ router.get("/logout", async (req: AuthRequest, res: Response) => {
     }
 
     // Gửi tokens về client
-    res.status(200);
+    res.status(200).json({
+      message: "logout success",
+    });
   } catch (error) {
     console.error("Logout error:", error);
     res.status(500).json({ message: "Internal server error" });
