@@ -24,6 +24,7 @@ router.get(
       res.status(200).json({
         id: user._id,
         email: user.email,
+        userName: user.userName,
         role: user.role,
       });
     } catch (error) {
