@@ -149,6 +149,35 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
   }
 });
 
+router.get("/logout", async (req: AuthRequest, res: Response) => {
+  try {
+    const refreshToken = req.cookies[process.env.RFTK_KEY ?? ""];
+    if (refreshToken) {
+      // Verify the refresh token
+      const payload = verifyRefreshToken(refreshToken);
+
+      // Find the user with this refresh token
+      const user = await User.findOne({
+        _id: payload.userId,
+        refreshToken: refreshToken,
+      });
+
+      if (user) {
+        user.refreshToken = "";
+        await user.save();
+      }
+
+      res.clearCookie(process.env.RFTK_KEY ?? "");
+    }
+
+    // Gửi tokens về client
+    res.status(200);
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 router.post(
   "/refresh-token",
   async (req: RefreshTokenRequest, res: Response) => {
