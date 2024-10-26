@@ -1,12 +1,13 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { verifyAccessToken } from "../utils/jwt";
-
-export interface AuthRequest extends Request {
-  user?: { userId: string };
-}
+import {
+  AuthRequest,
+  AuthResponse,
+  MiddlewareAuthRequest,
+} from "../types/auth.type";
 
 export function authenticateToken(
-  req: AuthRequest,
+  req: MiddlewareAuthRequest,
   res: Response,
   next: NextFunction
 ) {
@@ -28,3 +29,39 @@ export function authenticateToken(
     return;
   }
 }
+
+// middlewares/validateLoginRequest.ts
+export const validateLoginRequest = (
+  req: AuthRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  const { type } = req.body;
+
+  if (!type) {
+    res.status(400).json({ message: "Login type is required" });
+    return;
+  }
+
+  switch (type) {
+    case "google":
+      if (!req.body.token) {
+        res.status(400).json({ message: "Google token is required" });
+        return;
+      }
+      break;
+
+    case "email":
+      if (!req.body.email || !req.body.password) {
+        res.status(400).json({ message: "Email and password are required" });
+        return;
+      }
+      break;
+
+    default:
+      res.status(400).json({ message: "Invalid login type" });
+      return;
+  }
+
+  next();
+};
