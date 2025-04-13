@@ -1,32 +1,34 @@
-import User, { IUser } from "../models/User";
+import { User } from "../models/user.model";
+import { IUserInput, IUser } from "../types";
 
 export class UserService {
-  async findUser(criteria: {
-    _id?: string;
-    email?: string;
-    refreshToken?: string;
-  }): Promise<IUser | null> {
-    return User.findOne({ ...criteria });
+  static async createUser(userInput: IUserInput) {
+    // Set default role if none provided
+    if (!userInput.roles || userInput.roles.length === 0) {
+      userInput.roles = ["user"];
+    }
+
+    const user = await User.create(userInput);
+    return user;
   }
 
-  async createUser(userData: {
-    email?: string;
-    password?: string;
-    userName?: string;
-    role?: "user" | "admin";
-    refreshToken?: string;
-    provider?: "email" | "google";
-    providerId?: string;
-    isVerified?: boolean;
-    avatar?: string;
-    isActive?: boolean;
-  }): Promise<IUser> {
-    const user = new User({
-      ...userData,
-      role: userData.role ?? "user",
-      provider: userData.provider ?? "email",
-    });
+  static async getUserById(id: string): Promise<IUser | null> {
+    return User.findById(id);
+  }
 
-    return user.save();
+  static async updateUser(
+    id: string,
+    updateData: Partial<IUserInput>
+  ): Promise<IUser | null> {
+    return User.findByIdAndUpdate(id, updateData, { new: true });
+  }
+
+  static async deleteUser(id: string): Promise<boolean> {
+    const result = await User.findByIdAndDelete(id);
+    return !!result;
+  }
+
+  static async getAllUsers(): Promise<IUser[]> {
+    return User.find();
   }
 }

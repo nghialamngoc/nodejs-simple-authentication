@@ -1,55 +1,46 @@
-import cors from "cors";
 import dotenv from "dotenv";
-import express from "express";
 import path from "path";
-import connectDB from "./database";
-import authRoutes from "./routes/auth";
-import userRoutes from "./routes/user";
-import cookieParser from "cookie-parser";
 
-// Xác định môi trường
 const environment = process.env.NODE_ENV || "development";
 
-// Load file .env tương ứng
+// Load file .env tương ứng **first**
 dotenv.config({
   path: path.resolve(__dirname, `../.env.${environment}`),
 });
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",")
-  : [];
+// Now import other modules
+import express, { Request, Response } from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import { routes } from "./routes";
+import { connectDB } from "./config/database";
+import { config } from "./config"; // Import config after dotenv
+import { logger } from "./utils/logger";
 
-console.log(`Current environment: ${environment}`);
-
+// Create Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// CORS config
-app.use(
-  cors({
-    origin: allowedOrigins,
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-    credentials: true,
-  })
-);
+// Middlewares
+app.use(cors());
+app.use(helmet());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan("dev"));
 
-// Cookie parser
-app.use(cookieParser());
+// Routes
+app.use("/api", routes);
+
+// Health check
+app.get("/health", (req: Request, res: Response) => {
+  res.status(200).json({ status: "OK" });
+});
 
 connectDB();
 
-app.use(express.json());
-
-app.get("/", (req, res) => {
-  res.send(`Hello, TypeScript with MongoDB! Environment 1: ${environment}`);
-});
-
-app.use("/api/auth", authRoutes);
-
-app.use("/api/user", userRoutes);
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT} in ${environment} mode`);
+// Start server
+app.listen(config.port, () => {
+  logger.info(
+    `Server running in ${config.nodeEnv} mode on port ${config.port}`
+  );
 });
