@@ -5,6 +5,35 @@ import { ResponseHandler } from "../utils/responseHandler";
 import { logger } from "../utils/logger";
 
 export class AuthController {
+  static async register(req: Request, res: Response) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return ResponseHandler.error(
+          res,
+          "Validation Error",
+          400,
+          errors.array()
+        );
+      }
+
+      const registerResult = await AuthService.register(req.body);
+
+      if (!registerResult) {
+        return ResponseHandler.error(res, "Email already exists", 401);
+      }
+
+      return ResponseHandler.success(
+        res,
+        registerResult,
+        "Register successful"
+      );
+    } catch (error) {
+      logger.error("Register error:", error);
+      return ResponseHandler.error(res, "Register failed");
+    }
+  }
+
   static async login(req: Request, res: Response) {
     try {
       const errors = validationResult(req);
@@ -69,14 +98,12 @@ export class AuthController {
     try {
       const { refreshToken } = req.body;
 
-      if (!refreshToken) {
-        return ResponseHandler.error(res, "Refresh token is required", 400);
-      }
+      if (refreshToken) {
+        const result = await AuthService.logout(refreshToken);
 
-      const result = await AuthService.logout(refreshToken);
-
-      if (!result) {
-        return ResponseHandler.error(res, "Logout failed", 400);
+        if (!result) {
+          return ResponseHandler.error(res, "Logout failed", 400);
+        }
       }
 
       return ResponseHandler.success(res, null, "Logged out successfully");

@@ -20,6 +20,7 @@ export class AuthMiddleware {
         token,
         jwtConfig.accessSecret
       ) as ITokenPayload;
+
       req.user = {
         userId: decoded.userId,
         roles: decoded.roles,

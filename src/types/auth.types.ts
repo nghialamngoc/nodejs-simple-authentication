@@ -22,3 +22,9 @@ export interface IAuthResponse {
 export interface IRefreshTokenInput {
   refreshToken: string;
 }
+
+export interface IRegisterInput {
+  email: string;
+  password: string;
+  name?: string;
+}

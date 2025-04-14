@@ -87,8 +87,11 @@ export class UserController {
 
   static async getAllUsers(req: Request, res: Response): Promise<void> {
     try {
-      const users = await UserService.getAllUsers();
-      ResponseHandler.success(res, users, "Users retrieved successfully");
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const data = await UserService.getAllUsers({ page, limit });
+      ResponseHandler.success(res, data, "Users retrieved successfully");
     } catch (error) {
       logger.error("Get all users error:", error);
       ResponseHandler.error(res, "Failed to get users");

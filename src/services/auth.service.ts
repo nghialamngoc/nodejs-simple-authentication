@@ -6,12 +6,49 @@ import {
   ITokenPayload,
   IAuthResponse,
   IRefreshTokenInput,
-  IUser,
+  IRegisterInput,
 } from "../types";
 import { jwtConfig } from "../config/jwt";
 import { ms } from "../utils/time";
+import * as bcrypt from "bcryptjs";
 
 export class AuthService {
+  static async register(
+    registerInput: IRegisterInput
+  ): Promise<IAuthResponse | null> {
+    const { email, password, name } = registerInput;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return null;
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Tạo người dùng mới
+    const user = await User.create({
+      email,
+      password: hashedPassword,
+      name,
+      roles: ["user"],
+      isActive: true,
+    });
+
+    const tokens = await this.generateTokens(user._id.toString(), user.roles);
+
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        roles: user.roles,
+      },
+    };
+  }
+
   static async login(loginInput: ILoginInput): Promise<IAuthResponse | null> {
     const { email, password } = loginInput;
 
@@ -93,9 +130,8 @@ export class AuthService {
     const accessToken = this.generateAccessToken(userId, roles);
     const refreshToken = this.generateRefreshToken(userId, roles);
 
-    // Save refresh token to database
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+    expiresAt.setTime(expiresAt.getTime() + ms(jwtConfig.accessExpiresIn));
 
     await Token.create({
       userId,

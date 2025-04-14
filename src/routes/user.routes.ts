@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 import { UserController } from "../controllers/user.controller";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { RBACMiddleware } from "../middlewares/rbac.middleware";
@@ -63,6 +63,8 @@ router.put(
   (req: Request, res: Response, next: NextFunction) => {
     const authReq = req;
     // Allow update to own profile or admin access to any profile
+    console.log("a", authReq.user);
+
     if (
       authReq.user &&
       (authReq.user.userId === req.params.id ||
@@ -72,6 +74,12 @@ router.put(
       if (req.body.roles && !authReq.user.roles.includes("admin")) {
         delete req.body.roles;
       }
+
+      // Only admins can update email
+      if (req.body.email && !authReq.user.roles.includes("admin")) {
+        delete req.body.email;
+      }
+
       next();
     } else {
       ResponseHandler.error(res, "Forbidden: Access denied", 403);
@@ -94,7 +102,20 @@ router.delete(
 // Get all users - Only admins can list all users
 router.get(
   "/",
-  [AuthMiddleware.authenticate, RBACMiddleware.hasRole(["admin"])],
+  [
+    AuthMiddleware.authenticate,
+    query("page")
+      .optional()
+      .isInt({ min: 1 })
+      .toInt()
+      .withMessage("Page must be a positive integer"),
+    query("limit")
+      .optional()
+      .isInt({ min: 1 })
+      .toInt()
+      .withMessage("Limit must be a positive integer"),
+    RBACMiddleware.hasRole(["admin"]),
+  ],
   UserController.getAllUsers
 );
 

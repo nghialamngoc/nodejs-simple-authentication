@@ -4,6 +4,22 @@ import { AuthController } from "../controllers/auth.controller";
 
 const router = Router();
 
+// Register route
+router.post(
+  "/register",
+  [
+    body("email").isEmail().withMessage("Please provide a valid email"),
+    body("password")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters long")
+      .matches(/\d/)
+      .withMessage("Password must contain at least one number")
+      .matches(/[!@#$%^&*(),.?":{}|<>]/)
+      .withMessage("Password must contain at least one special character"),
+  ],
+  AuthController.register
+);
+
 // Login route
 router.post(
   "/login",
@@ -24,10 +40,6 @@ router.post(
 );
 
 // Logout route
-router.post(
-  "/logout",
-  [body("refreshToken").notEmpty().withMessage("Refresh token is required")],
-  AuthController.logout
-);
+router.post("/logout", AuthController.logout);
 
 export const authRoutes = router;

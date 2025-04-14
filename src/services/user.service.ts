@@ -28,7 +28,34 @@ export class UserService {
     return !!result;
   }
 
-  static async getAllUsers(): Promise<IUser[]> {
-    return User.find();
+  static async getAllUsers({
+    page = 1,
+    limit = 10,
+  }): Promise<{ users: IUser[]; total: number; page: number; limit: number }> {
+    const skip = (page - 1) * limit;
+
+    const users = await User.find().skip(skip).limit(limit);
+
+    const total = await User.countDocuments();
+
+    const userList: IUser[] = users.map((user) => {
+      const { _id, name, email, roles, isActive, createdAt, updatedAt } = user;
+      return {
+        _id: _id.toString(),
+        name,
+        email,
+        roles,
+        isActive,
+        createdAt,
+        updatedAt,
+      };
+    });
+
+    return {
+      users: userList,
+      total,
+      page,
+      limit,
+    };
   }
 }
