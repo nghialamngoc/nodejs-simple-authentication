@@ -42,4 +42,10 @@ router.post(
 // Logout route
 router.post("/logout", AuthController.logout);
 
+router.post(
+  "/google-login",
+  [body("idToken").notEmpty().withMessage("ID token is required")],
+  AuthController.googleLogin
+);
+
 export const authRoutes = router;

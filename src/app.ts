@@ -17,16 +17,26 @@ import { routes } from "./routes";
 import { connectDB } from "./config/database";
 import { config } from "./config"; // Import config after dotenv
 import { logger } from "./utils/logger";
+import cookieParser from "cookie-parser";
 
 // Create Express app
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: config.allowedOrigins,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    credentials: true,
+  })
+);
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
+app.use(cookieParser());
 
 // Routes
 app.use("/api", routes);

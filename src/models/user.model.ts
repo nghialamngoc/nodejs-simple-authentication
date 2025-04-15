@@ -3,6 +3,7 @@ import * as bcrypt from "bcryptjs";
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
+  googleId: string;
   email: string;
   password: string;
   name: string;
@@ -15,6 +16,11 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
     email: {
       type: String,
       required: true,
@@ -24,7 +30,6 @@ const UserSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: true,
     },
     name: {
       type: String,
@@ -44,7 +49,7 @@ const UserSchema = new Schema<IUser>(
 
 // Hash password before saving
 UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password") || !this.password) return next();
 
   try {
     const salt = await bcrypt.genSalt(10);

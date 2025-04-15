@@ -11,6 +11,10 @@ import {
 import { jwtConfig } from "../config/jwt";
 import { ms } from "../utils/time";
 import * as bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
+import { config } from "../config";
+
+const googleClient = new OAuth2Client(config.googleClientId);
 
 export class AuthService {
   static async register(
@@ -73,6 +77,55 @@ export class AuthService {
         roles: user.roles,
       },
     };
+  }
+
+  static async googleLogin(idToken: string): Promise<IAuthResponse | null> {
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: config.googleClientId,
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload) return null;
+
+      const { sub: googleId, email, name } = payload;
+
+      let user = await User.findOne({ googleId });
+
+      if (!user) {
+        user = await User.findOne({ email });
+
+        if (user) {
+          user.googleId = googleId;
+          await user.save();
+        } else {
+          user = await User.create({
+            googleId,
+            email,
+            name: name || "Google User",
+            roles: ["user"],
+            isActive: true,
+          });
+        }
+      }
+
+      const tokens = await this.generateTokens(user._id.toString(), user.roles);
+
+      return {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          roles: user.roles,
+        },
+      };
+    } catch (error) {
+      console.log("googleLogin error:", error);
+      return null;
+    }
   }
 
   static async refreshToken(
