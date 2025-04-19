@@ -5,6 +5,7 @@ import { ResponseHandler } from "../utils/responseHandler";
 import { logger } from "../utils/logger";
 import { ms } from "../utils/time";
 import { jwtConfig } from "../config/jwt";
+import { UserService } from "../services/user.service";
 
 const setRefreshTokenCookie = (res: Response, refreshToken: string) => {
   res.cookie("refreshToken", refreshToken, {
@@ -167,6 +168,29 @@ export class AuthController {
       return ResponseHandler.success(res, responseData);
     } catch (error) {
       return ResponseHandler.error(res, "Failed to login with Google", 500);
+    }
+  }
+
+  static async getUser(req: Request, res: Response) {
+    try {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        ResponseHandler.error(res, "User not found", 404);
+        return;
+      }
+
+      const user = await UserService.getUserById(userId);
+
+      if (!user) {
+        ResponseHandler.error(res, "User not found", 404);
+        return;
+      }
+
+      ResponseHandler.success(res, user, "User retrieved successfully");
+    } catch (error) {
+      logger.error("Get user error:", error);
+      ResponseHandler.error(res, "Failed to get user");
     }
   }
 }

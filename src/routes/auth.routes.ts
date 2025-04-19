@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { body } from "express-validator";
 import { AuthController } from "../controllers/auth.controller";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -47,5 +48,7 @@ router.post(
   [body("idToken").notEmpty().withMessage("ID token is required")],
   AuthController.googleLogin
 );
+
+router.get("/user", [AuthMiddleware.authenticate], AuthController.getUser);
 
 export const authRoutes = router;
