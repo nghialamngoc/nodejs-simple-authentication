@@ -45,7 +45,7 @@ router.post("/logout", AuthController.logout);
 
 router.post(
   "/google-login",
-  [body("idToken").notEmpty().withMessage("ID token is required")],
+  [body("accessToken").notEmpty().withMessage("Access token is required")],
   AuthController.googleLogin
 );
 

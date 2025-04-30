@@ -152,10 +152,9 @@ export class AuthController {
       );
     }
 
-    const { idToken } = req.body;
-
+    const { accessToken } = req.body;
     try {
-      const result = await AuthService.googleLogin(idToken);
+      const result = await AuthService.googleLogin(accessToken);
       if (!result) {
         return ResponseHandler.error(res, "Invalid Google ID token", 401);
       }

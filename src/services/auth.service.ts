@@ -80,17 +80,26 @@ export class AuthService {
     };
   }
 
-  static async googleLogin(idToken: string): Promise<IAuthResponse | null> {
+  static async googleLogin(accessToken: string): Promise<IAuthResponse | null> {
     try {
-      const ticket = await googleClient.verifyIdToken({
-        idToken,
-        audience: config.googleClientId,
-      });
+      console.log("accessToken", accessToken);
 
-      const payload = ticket.getPayload();
-      if (!payload) return null;
+      const response = await axios.get(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
-      const { sub: providerId, email, name } = payload;
+      console.log("response", response);
+
+      const { sub: providerId, email, name } = response.data;
+
+      if (!email) {
+        throw new Error("Email not provided by Google");
+      }
 
       let user = await User.findOne({
         providerId: providerId,
@@ -127,8 +136,8 @@ export class AuthService {
           roles: user.roles,
         },
       };
-    } catch (error) {
-      console.log("googleLogin error:", error);
+    } catch (error: any) {
+      console.log("googleLogin error:", error.message);
       return null;
     }
   }
