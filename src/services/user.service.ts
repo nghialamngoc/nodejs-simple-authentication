@@ -9,11 +9,18 @@ export class UserService {
     }
 
     const user = await User.create(userInput);
-    return user;
+    return {
+      ...user,
+      _id: user._id.toString(),
+    };
   }
 
   static async getUserById(id: string): Promise<IUser | null> {
     return User.findById(id);
+  }
+
+  static async getUserByEmail(email: string): Promise<IUser | null> {
+    return User.findById(email);
   }
 
   static async updateUser(
@@ -39,7 +46,16 @@ export class UserService {
     const total = await User.countDocuments();
 
     const userList: IUser[] = users.map((user) => {
-      const { _id, name, email, roles, isActive, createdAt, updatedAt } = user;
+      const {
+        _id,
+        name,
+        email,
+        roles,
+        isActive,
+        createdAt,
+        updatedAt,
+        provider,
+      } = user;
       return {
         _id: _id.toString(),
         name,
@@ -48,6 +64,7 @@ export class UserService {
         isActive,
         createdAt,
         updatedAt,
+        provider,
       };
     });
 

@@ -3,7 +3,8 @@ import * as bcrypt from "bcryptjs";
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
-  googleId: string;
+  provider: "local" | "google" | "facebook";
+  providerId: string;
   email: string;
   password: string;
   name: string;
@@ -16,10 +17,15 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
-    googleId: {
+    provider: {
+      type: String,
+      enum: ["local", "google", "facebook"],
+      default: "local",
+    },
+    providerId: {
       type: String,
       unique: true,
-      sparse: true,
+      sparse: true, // Cho phép nhiều document có providerId là null
     },
     email: {
       type: String,

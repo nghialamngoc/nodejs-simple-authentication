@@ -171,6 +171,35 @@ export class AuthController {
     }
   }
 
+  static async facebookLogin(req: Request, res: Response) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return ResponseHandler.error(
+        res,
+        "Validation Error",
+        400,
+        errors.array()
+      );
+    }
+
+    const { accessToken } = req.body;
+
+    try {
+      const result = await AuthService.facebookLogin(accessToken);
+      if (!result) {
+        return ResponseHandler.error(res, "Invalid Facebook access token", 401);
+      }
+
+      setRefreshTokenCookie(res, result.refreshToken);
+      const { refreshToken, ...responseData } = result;
+
+      return ResponseHandler.success(res, responseData);
+    } catch (error) {
+      logger.error("Facebook login error:", error);
+      return ResponseHandler.error(res, "Failed to login with Facebook", 500);
+    }
+  }
+
   static async getUser(req: Request, res: Response) {
     try {
       const userId = req.user?.userId;

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { body } from "express-validator";
+import { body, cookie } from "express-validator";
 import { AuthController } from "../controllers/auth.controller";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 
@@ -36,7 +36,7 @@ router.post(
 // Refresh token route
 router.post(
   "/refresh-token",
-  [body("refreshToken").notEmpty().withMessage("Refresh token is required")],
+  [cookie("refreshToken").notEmpty().withMessage("Refresh token is required")],
   AuthController.refreshToken
 );
 

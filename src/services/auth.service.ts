@@ -13,6 +13,7 @@ import { ms } from "../utils/time";
 import * as bcrypt from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
 import { config } from "../config";
+import axios from "axios";
 
 const googleClient = new OAuth2Client(config.googleClientId);
 
@@ -89,19 +90,23 @@ export class AuthService {
       const payload = ticket.getPayload();
       if (!payload) return null;
 
-      const { sub: googleId, email, name } = payload;
+      const { sub: providerId, email, name } = payload;
 
-      let user = await User.findOne({ googleId });
+      let user = await User.findOne({
+        providerId: providerId,
+        provider: "google",
+      });
 
       if (!user) {
         user = await User.findOne({ email });
 
         if (user) {
-          user.googleId = googleId;
+          user.providerId = providerId;
           await user.save();
         } else {
           user = await User.create({
-            googleId,
+            providerId,
+            provider: "google",
             email,
             name: name || "Google User",
             roles: ["user"],
@@ -124,6 +129,49 @@ export class AuthService {
       };
     } catch (error) {
       console.log("googleLogin error:", error);
+      return null;
+    }
+  }
+
+  static async facebookLogin(accessToken: string) {
+    try {
+      const response = await axios.get(
+        `${config.fbClientId}/me?fields=id,name,email&access_token=${accessToken}`
+      );
+
+      const { id, name, email } = response.data;
+
+      if (!email) {
+        throw new Error("Email not provided by Facebook");
+      }
+
+      let user = await User.findOne(email);
+
+      if (!user) {
+        user = await User.create({
+          email,
+          name: name || `Facebook User ${id}`,
+          password: "",
+          provider: "facebook",
+          roles: ["user"],
+          providerId: id,
+        });
+      }
+
+      const tokens = await this.generateTokens(user._id.toString(), user.roles);
+
+      return {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          roles: user.roles,
+        },
+      };
+    } catch (error) {
+      console.error("Facebook login error:", error);
       return null;
     }
   }

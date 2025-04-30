@@ -5,6 +5,8 @@ export interface IUser {
   name?: string;
   roles: string[];
   isActive?: boolean;
+  provider?: "local" | "google" | "facebook";
+  providerId?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
