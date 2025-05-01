@@ -145,7 +145,7 @@ export class AuthService {
   static async facebookLogin(accessToken: string) {
     try {
       const response = await axios.get(
-        `${config.fbClientId}/me?fields=id,name,email&access_token=${accessToken}`
+        `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`
       );
 
       const { id, name, email } = response.data;
@@ -154,7 +154,7 @@ export class AuthService {
         throw new Error("Email not provided by Facebook");
       }
 
-      let user = await User.findOne(email);
+      let user = await User.findOne({ email });
 
       if (!user) {
         user = await User.create({

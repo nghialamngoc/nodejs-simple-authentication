@@ -25,7 +25,7 @@ const app = express();
 // Middlewares
 app.use(
   cors({
-    origin: config.allowedOrigins,
+    origin: config.allowedOrigins.split(","),
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     preflightContinue: false,
     optionsSuccessStatus: 204,

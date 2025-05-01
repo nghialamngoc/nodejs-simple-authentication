@@ -49,6 +49,12 @@ router.post(
   AuthController.googleLogin
 );
 
+router.post(
+  "/facebook-login",
+  [body("accessToken").notEmpty().withMessage("Access token is required")],
+  AuthController.facebookLogin
+);
+
 router.get("/user", [AuthMiddleware.authenticate], AuthController.getUser);
 
 export const authRoutes = router;
