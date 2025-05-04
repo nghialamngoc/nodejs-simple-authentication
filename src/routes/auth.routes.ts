@@ -33,6 +33,29 @@ router.post(
   AuthController.login
 );
 
+// Kích hoạt 2FA
+router.post(
+  "/enable-2fa",
+  [
+    body("email").isEmail().withMessage("Please provide a valid email"),
+    body("otp").isEmail().withMessage("Please provide a valid otp"),
+    body("tempSecret")
+      .isEmail()
+      .withMessage("Please provide a valid tempSecret"),
+  ],
+  AuthController.enable2FA
+);
+
+// Xác minh 2FA
+router.post(
+  "/verify-2fa",
+  [
+    body("email").isEmail().withMessage("Please provide a valid email"),
+    body("otp").isEmail().withMessage("Please provide a valid otp"),
+  ],
+  AuthController.verify2FA
+);
+
 // Refresh token route
 router.post(
   "/refresh-token",
