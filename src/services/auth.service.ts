@@ -14,6 +14,8 @@ import * as bcrypt from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
 import { config } from "../config";
 import axios from "axios";
+import speakeasy from "speakeasy";
+import qrcode from "qrcode";
 
 const googleClient = new OAuth2Client(config.googleClientId);
 
@@ -38,6 +40,7 @@ export class AuthService {
       name,
       roles: ["user"],
       isActive: true,
+      twoFactorEnabled: false,
     });
 
     const tokens = await this.generateTokens(user._id.toString(), user.roles);
@@ -65,12 +68,31 @@ export class AuthService {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return null;
 
-    // Generate tokens
-    const tokens = await this.generateTokens(user._id.toString(), user.roles);
+    // Kiểm tra 2FA
+    if (user.twoFactorEnabled) {
+      // Nếu 2FA đã bật, yêu cầu mã OTP
+      return {
+        requires2FA: true,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          roles: user.roles,
+        },
+      };
+    }
+
+    // Nếu 2FA chưa bật, tạo bí mật TOTP và mã QR
+    const secret = speakeasy.generateSecret({
+      name: `BeuBeoAccessory:${email}`,
+      issuer: "BeuBeoAccessory",
+    });
+    const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url!);
 
     return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+      requires2FA: true,
+      qrCodeUrl,
+      tempSecret: secret.base32,
       user: {
         id: user._id.toString(),
         email: user.email,
@@ -80,10 +102,112 @@ export class AuthService {
     };
   }
 
+  static async enable2FA(
+    email: string,
+    otp: string,
+    tempSecret: string
+  ): Promise<IAuthResponse | null> {
+    try {
+      // Xác minh mã OTP
+      const isValid = speakeasy.totp.verify({
+        secret: tempSecret,
+        encoding: "base32",
+        token: otp,
+        window: 1, // Cho phép sai lệch thời gian
+      });
+
+      if (!isValid) {
+        return null; // OTP không hợp lệ
+      }
+
+      // Tìm người dùng
+      const user = await User.findOne({ email, isActive: true });
+      if (!user) {
+        return null; // Không tìm thấy người dùng
+      }
+
+      // Tạo mã khôi phục
+      const recoveryCodes = Array.from({ length: 8 }, () =>
+        Math.random().toString(36).substring(2, 10).toUpperCase()
+      );
+
+      // Cập nhật 2FA
+      await User.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            twoFactorEnabled: true,
+            twoFactorSecret: tempSecret,
+            recoveryCodes,
+          },
+        }
+      );
+
+      // Tạo token
+      const tokens = await this.generateTokens(user._id.toString(), user.roles);
+
+      return {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          roles: user.roles,
+        },
+        recoveryCodes, // Trả về mã khôi phục
+      };
+    } catch (error) {
+      console.error("Enable 2FA error:", error);
+      return null;
+    }
+  }
+
+  // Xác minh mã OTP
+  static async verify2FA(
+    email: string,
+    otp: string
+  ): Promise<IAuthResponse | null> {
+    try {
+      // Tìm người dùng
+      const user = await User.findOne({ email, isActive: true });
+      if (!user || !user.twoFactorEnabled) {
+        return null; // 2FA không bật hoặc không tìm thấy người dùng
+      }
+
+      // Xác minh mã OTP
+      const isValid = speakeasy.totp.verify({
+        secret: user.twoFactorSecret!,
+        encoding: "base32",
+        token: otp,
+        window: 1,
+      });
+
+      if (!isValid) {
+        return null; // OTP không hợp lệ
+      }
+
+      // Tạo token
+      const tokens = await this.generateTokens(user._id.toString(), user.roles);
+
+      return {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          roles: user.roles,
+        },
+      };
+    } catch (error) {
+      console.error("Verify 2FA error:", error);
+      return null;
+    }
+  }
+
   static async googleLogin(accessToken: string): Promise<IAuthResponse | null> {
     try {
-      console.log("accessToken", accessToken);
-
       const response = await axios.get(
         "https://www.googleapis.com/oauth2/v3/userinfo",
         {
@@ -120,6 +244,7 @@ export class AuthService {
             name: name || "Google User",
             roles: ["user"],
             isActive: true,
+            twoFactorEnabled: false,
           });
         }
       }
@@ -164,6 +289,8 @@ export class AuthService {
           provider: "facebook",
           roles: ["user"],
           providerId: id,
+          isActive: true,
+          twoFactorEnabled: false,
         });
       }
 

@@ -64,7 +64,17 @@ export class AuthController {
         return ResponseHandler.error(res, "Invalid credentials", 401);
       }
 
-      setRefreshTokenCookie(res, loginResult.refreshToken);
+      // Kiểm tra 2FA
+      if (loginResult.requires2FA) {
+        const { requires2FA, qrCodeUrl, tempSecret, user } = loginResult;
+        return ResponseHandler.success(
+          res,
+          { requires2FA, qrCodeUrl, tempSecret, user },
+          "2FA required"
+        );
+      }
+
+      setRefreshTokenCookie(res, loginResult.refreshToken!);
 
       const { refreshToken, ...responseData } = loginResult;
 
@@ -72,6 +82,74 @@ export class AuthController {
     } catch (error) {
       logger.error("Login error:", error);
       return ResponseHandler.error(res, "Login failed");
+    }
+  }
+
+  static async enable2FA(req: Request, res: Response) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return ResponseHandler.error(
+          res,
+          "Validation Error",
+          400,
+          errors.array()
+        );
+      }
+
+      const { email, otp, tempSecret } = req.body;
+      const result = await AuthService.enable2FA(email, otp, tempSecret);
+
+      if (!result) {
+        return ResponseHandler.error(res, "Failed to enable 2FA", 401);
+      }
+
+      // Đặt cookie và trả về token
+      setRefreshTokenCookie(res, result.refreshToken!);
+      const { refreshToken, ...responseData } = result;
+
+      return ResponseHandler.success(
+        res,
+        responseData,
+        "2FA enabled successfully"
+      );
+    } catch (error) {
+      logger.error("Enable 2FA error:", error);
+      return ResponseHandler.error(res, "Failed to enable 2FA");
+    }
+  }
+
+  static async verify2FA(req: Request, res: Response) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return ResponseHandler.error(
+          res,
+          "Validation Error",
+          400,
+          errors.array()
+        );
+      }
+
+      const { email, otp } = req.body;
+      const result = await AuthService.verify2FA(email, otp);
+
+      if (!result) {
+        return ResponseHandler.error(res, "Invalid OTP", 401);
+      }
+
+      // Đặt cookie và trả về token
+      setRefreshTokenCookie(res, result.refreshToken!);
+      const { refreshToken, ...responseData } = result;
+
+      return ResponseHandler.success(
+        res,
+        responseData,
+        "2FA verified successfully"
+      );
+    } catch (error) {
+      logger.error("Verify 2FA error:", error);
+      return ResponseHandler.error(res, "Failed to verify 2FA");
     }
   }
 
@@ -159,7 +237,7 @@ export class AuthController {
         return ResponseHandler.error(res, "Invalid Google ID token", 401);
       }
 
-      setRefreshTokenCookie(res, result.refreshToken);
+      setRefreshTokenCookie(res, result.refreshToken!);
 
       // Loại bỏ refreshToken khỏi response body
       const { refreshToken, ...responseData } = result;

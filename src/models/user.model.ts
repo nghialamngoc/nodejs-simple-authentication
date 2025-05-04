@@ -12,6 +12,9 @@ export interface IUser extends Document {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  twoFactorEnabled?: boolean;
+  twoFactorSecret?: string;
+  recoveryCodes?: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -49,6 +52,9 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: true,
     },
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorSecret: { type: String },
+    recoveryCodes: [{ type: String }],
   },
   { timestamps: true }
 );
