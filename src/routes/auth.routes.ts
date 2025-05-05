@@ -38,9 +38,9 @@ router.post(
   "/enable-2fa",
   [
     body("email").isEmail().withMessage("Please provide a valid email"),
-    body("otp").isEmail().withMessage("Please provide a valid otp"),
+    body("otp").isString().withMessage("Please provide a valid otp"),
     body("tempSecret")
-      .isEmail()
+      .isString()
       .withMessage("Please provide a valid tempSecret"),
   ],
   AuthController.enable2FA
@@ -51,7 +51,7 @@ router.post(
   "/verify-2fa",
   [
     body("email").isEmail().withMessage("Please provide a valid email"),
-    body("otp").isEmail().withMessage("Please provide a valid otp"),
+    body("otp").isString().withMessage("Please provide a valid otp"),
   ],
   AuthController.verify2FA
 );
